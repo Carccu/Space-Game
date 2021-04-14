@@ -70,7 +70,7 @@ class Player1(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.radius = 40
         # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
-        self.rect.right = WIN_WIDTH / 2 / 2 - 5
+        self.rect.centerx = WIN_WIDTH / 2 / 2 - 5
         self.rect.centery = WIN_HEIGHT / 2
         self.vel = 7
         self.health = 100
@@ -113,7 +113,7 @@ class Player1(pygame.sprite.Sprite):
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
             if len(bullets) < self.max_bullets:
-                bullet = Bullet1(self.rect.right, self.rect.centery)
+                bullet = Bullet(PL1_BULLET, 90, 'left', self.rect.centerx + 70, self.rect.centery)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 SHOOT.play()
@@ -126,7 +126,7 @@ class Player2(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.radius = 40
         # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
-        self.rect.left = WIN_WIDTH / 4 * 3
+        self.rect.centerx = WIN_WIDTH / 4 * 3
         self.rect.centery = WIN_HEIGHT / 2
         self.vel = 7
         self.health = 100
@@ -161,7 +161,7 @@ class Player2(pygame.sprite.Sprite):
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
             if len(bullets) < self.max_bullets:
-                bullet = Bullet2(self.rect.left, self.rect.centery)
+                bullet = Bullet(PL2_BULLET, 270, 'right', self.rect.centerx - 70, self.rect.centery)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 SHOOT.play()
@@ -172,38 +172,28 @@ class Player2(pygame.sprite.Sprite):
         self.hide_timer = pygame.time.get_ticks()
         self.rect.center = (WIN_WIDTH + 200, WIN_HEIGHT / 2)
 
-class Bullet1(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, image, rotation, player_pos, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.rotate(PL1_BULLET, 90)
+        self.image = pygame.transform.rotate(image, rotation)
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width * .85 / 2)
-        self.rect.left = x
+        self.rect.centerx = x
         self.rect.centery = y
         self.vel = 9
+        self.player_pos = player_pos
 
     def update(self):
-        self.rect.x += self.vel
-        if self.rect.x > WIN_WIDTH:
-            self.kill()
+        if self.player_pos == 'left':
+            self.rect.x += self.vel
+            if self.rect.centerx > WIN_WIDTH:
+                self.kill()
+        if self.player_pos == 'right':
+            self.rect.x -= self.vel
+            if self.rect.centerx < 0:
+                self.kill()
 
-class Bullet2(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.rotate(PL2_BULLET, 270)
-        self.image.set_colorkey(BLACK)
-        self.rect = self.image.get_rect()
-        self.radius = int(self.rect.width * .85 / 2)
-        # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
-        self.rect.right = x
-        self.rect.centery = y
-        self.vel = 9
-
-    def update(self):
-        self.rect.x -= self.vel
-        if self.rect.right < 0:
-            self.kill()
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, center, size):
