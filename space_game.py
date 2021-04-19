@@ -62,15 +62,15 @@ WINNER_SOUND = pygame.mixer.Sound(os.path.join(sound_dir, 'winning-chimes.wav'))
 all_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 
-class Player1(pygame.sprite.Sprite):
-    def __init__(self):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, image, rotation, player_pos, x):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.rotate(PL1, 90)
+        self.image = pygame.transform.rotate(image, rotation)
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.radius = 40
         # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
-        self.rect.centerx = WIN_WIDTH / 2 / 2 - 5
+        self.rect.centerx = x # WIN_WIDTH / 2 / 2 - 5
         self.rect.centery = WIN_HEIGHT / 2
         self.vel = 7
         self.health = 100
@@ -80,97 +80,116 @@ class Player1(pygame.sprite.Sprite):
         self.last_shot = pygame.time.get_ticks()
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
+        self.player_pos = player_pos
         
 
     def update(self):
         # Unhide if hidden
         if self.hidden and pygame.time.get_ticks() - self.hide_timer > 2000:
             self.hidden = False
-            self.rect.right = WIN_WIDTH / 2 / 2 - 5
+            if self.player_pos == 'left':
+                self.rect.right = WIN_WIDTH / 2 / 2 - 5
+            if self.player_pos == 'right':
+                self.rect.left = WIN_WIDTH / 4 * 3
             self.rect.centery = WIN_HEIGHT / 2
 
         keys_pressed = pygame.key.get_pressed()
-        if keys_pressed[pygame.K_w] and self.rect.top - self.vel > 0: # Move up
-            self.rect.top -= self.vel
-        if keys_pressed[pygame.K_s] and self.rect.bottom + self.vel < WIN_HEIGHT - 5: # Move down
-            self.rect.bottom += self.vel 
-        if keys_pressed[pygame.K_a] and self.rect.left - self.vel > 0: # Move left
-            self.rect.left -= self.vel
-        if keys_pressed[pygame.K_d] and self.rect.right + self.vel < WIN_WIDTH / 2 - 5: # Move right
-            self.rect.right += self.vel
-        if keys_pressed[pygame.K_RALT]:
-            self.shoot()
+        if self.player_pos == 'left':
+            if keys_pressed[pygame.K_w] and self.rect.top - self.vel > 0: # Move up
+                self.rect.top -= self.vel
+            if keys_pressed[pygame.K_s] and self.rect.bottom + self.vel < WIN_HEIGHT - 5: # Move down
+                self.rect.bottom += self.vel 
+            if keys_pressed[pygame.K_a] and self.rect.left - self.vel > 0: # Move left
+                self.rect.left -= self.vel
+            if keys_pressed[pygame.K_d] and self.rect.right + self.vel < WIN_WIDTH / 2 - 5: # Move right
+                self.rect.right += self.vel
+            if keys_pressed[pygame.K_RALT]:
+                self.shoot()
+
+        if self.player_pos == 'right':
+            if keys_pressed[pygame.K_UP] and self.rect.top - self.vel > 0: # Move up
+                self.rect.top -= self.vel
+            if keys_pressed[pygame.K_DOWN] and self.rect.bottom + self.vel < WIN_HEIGHT - 5: # Move down
+                self.rect.bottom += self.vel 
+            if keys_pressed[pygame.K_LEFT] and self.rect.left - self.vel > WIN_WIDTH / 2 + 5: # Move left
+                self.rect.left -= self.vel
+            if keys_pressed[pygame.K_RIGHT] and self.rect.right + self.vel < WIN_WIDTH: # Move right
+                self.rect.right += self.vel
+            if keys_pressed[pygame.K_RCTRL]:
+                self.shoot()
     
     def hide(self):
         # Hide the player temporarily
         self.hidden = True
         self.hide_timer = pygame.time.get_ticks()
-        self.rect.center = (-200, WIN_HEIGHT / 2)
-
-
-    def shoot(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_shot > self.shoot_delay:
-            self.last_shot = now
-            if len(bullets) < self.max_bullets:
-                bullet = Bullet(PL1_BULLET, 90, 'left', self.rect.centerx + 70, self.rect.centery)
-                all_sprites.add(bullet)
-                bullets.add(bullet)
-                SHOOT.play()
-
-class Player2(pygame.sprite.Sprite):
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.rotate(PL2, 270)
-        self.image.set_colorkey(BLACK)
-        self.rect = self.image.get_rect()
-        self.radius = 40
-        # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
-        self.rect.centerx = WIN_WIDTH / 4 * 3
-        self.rect.centery = WIN_HEIGHT / 2
-        self.vel = 7
-        self.health = 100
-        self.lives = 3
-        self.max_bullets = 5
-        self.shoot_delay = 250
-        self.last_shot = pygame.time.get_ticks()
-        self.hidden = False
-        self.hide_timer = pygame.time.get_ticks()
-
-    def update(self):
-        # Unhide if hidden
-        if self.hidden and pygame.time.get_ticks() - self.hide_timer > 2000:
-            self.hidden = False
-            self.rect.left = WIN_WIDTH / 4 * 3
-            self.rect.centery = WIN_HEIGHT / 2
-
-        keys_pressed = pygame.key.get_pressed()
-        if keys_pressed[pygame.K_UP] and self.rect.top - self.vel > 0: # Move up
-            self.rect.top -= self.vel
-        if keys_pressed[pygame.K_DOWN] and self.rect.bottom + self.vel < WIN_HEIGHT - 5: # Move down
-            self.rect.bottom += self.vel 
-        if keys_pressed[pygame.K_LEFT] and self.rect.left - self.vel > WIN_WIDTH / 2 + 5: # Move left
-            self.rect.left -= self.vel
-        if keys_pressed[pygame.K_RIGHT] and self.rect.right + self.vel < WIN_WIDTH: # Move right
-            self.rect.right += self.vel
-        if keys_pressed[pygame.K_RCTRL]:
-            self.shoot()
+        self.rect.center = (WIN_WIDTH / 2, WIN_HEIGHT + 200)
 
     def shoot(self):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
             if len(bullets) < self.max_bullets:
-                bullet = Bullet(PL2_BULLET, 270, 'right', self.rect.centerx - 70, self.rect.centery)
+                if self.player_pos == 'left':
+                    bullet = Bullet(PL1_BULLET, 90, 'left', self.rect.centerx + 70, self.rect.centery)
+                if self.player_pos == 'right':
+                    bullet = Bullet(PL2_BULLET, 270, 'right', self.rect.centerx - 70, self.rect.centery)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 SHOOT.play()
 
-    def hide(self):
-        # Hide the player temporarily
-        self.hidden = True
-        self.hide_timer = pygame.time.get_ticks()
-        self.rect.center = (WIN_WIDTH + 200, WIN_HEIGHT / 2)
+# class Player2(pygame.sprite.Sprite):
+#     def __init__(self):
+#         pygame.sprite.Sprite.__init__(self)
+#         self.image = pygame.transform.rotate(PL2, 270)
+#         self.image.set_colorkey(BLACK)
+#         self.rect = self.image.get_rect()
+#         self.radius = 40
+#         # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
+#         self.rect.centerx = WIN_WIDTH / 4 * 3
+#         self.rect.centery = WIN_HEIGHT / 2
+#         self.vel = 7
+#         self.health = 100
+#         self.lives = 3
+#         self.max_bullets = 5
+#         self.shoot_delay = 250
+#         self.last_shot = pygame.time.get_ticks()
+#         self.hidden = False
+#         self.hide_timer = pygame.time.get_ticks()
+
+#     def update(self):
+#         # Unhide if hidden
+#         if self.hidden and pygame.time.get_ticks() - self.hide_timer > 2000:
+#             self.hidden = False
+#             self.rect.left = WIN_WIDTH / 4 * 3
+#             self.rect.centery = WIN_HEIGHT / 2
+
+#         keys_pressed = pygame.key.get_pressed()
+#         if keys_pressed[pygame.K_UP] and self.rect.top - self.vel > 0: # Move up
+#             self.rect.top -= self.vel
+#         if keys_pressed[pygame.K_DOWN] and self.rect.bottom + self.vel < WIN_HEIGHT - 5: # Move down
+#             self.rect.bottom += self.vel 
+#         if keys_pressed[pygame.K_LEFT] and self.rect.left - self.vel > WIN_WIDTH / 2 + 5: # Move left
+#             self.rect.left -= self.vel
+#         if keys_pressed[pygame.K_RIGHT] and self.rect.right + self.vel < WIN_WIDTH: # Move right
+#             self.rect.right += self.vel
+#         if keys_pressed[pygame.K_RCTRL]:
+#             self.shoot()
+
+#     def shoot(self):
+#         now = pygame.time.get_ticks()
+#         if now - self.last_shot > self.shoot_delay:
+#             self.last_shot = now
+#             if len(bullets) < self.max_bullets:
+#                 bullet = Bullet(PL2_BULLET, 270, 'right', self.rect.centerx - 70, self.rect.centery)
+#                 all_sprites.add(bullet)
+#                 bullets.add(bullet)
+#                 SHOOT.play()
+
+#     def hide(self):
+#         # Hide the player temporarily
+#         self.hidden = True
+#         self.hide_timer = pygame.time.get_ticks()
+#         self.rect.center = (WIN_WIDTH + 200, WIN_HEIGHT / 2)
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, image, rotation, player_pos, x, y):
@@ -279,8 +298,8 @@ def main():
         if game_over:
             game_over_screen()
             game_over = False
-            player1 = Player1()
-            player2 = Player2()
+            player1 = Player(PL1, 90, 'left', WIN_WIDTH / 2 / 2 - 5)
+            player2 = Player(PL2, 270, 'right', WIN_WIDTH / 4 * 3)
             all_sprites.add(player1)
             all_sprites.add(player2)
 
@@ -322,12 +341,14 @@ def main():
                 player1.lives -= 1
                 player1.health = 100
 
-        # If the palyer died and the explosion has finished playing
+        # If the player died and the explosion has finished playing
         if player1.lives == 0 and not death_expl1.alive():
             winner_text('PLAYER 2 WINS!')
+            player1.lives = 3
             game_over_screen()
         if player2.lives == 0 and not death_expl2.alive():
             winner_text('PLAYER 1 WINS!')
+            player2.lives = 3
             game_over_screen()
         
 
@@ -348,6 +369,5 @@ def main():
     pygame.quit()
 
     
-
 if __name__ == '__main__':
     main()
